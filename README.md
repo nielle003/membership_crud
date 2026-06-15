@@ -102,15 +102,15 @@ uvicorn app.main:app --reload
 
 ### 3. Frontend
 
+Create `frontend/.env.local`:
+```
+REACT_APP_API_URL=http://localhost:8000
+```
+
 ```bash
 cd frontend
 npm install
 npm start
-```
-
-Create `frontend/.env.local`:
-```
-REACT_APP_API_URL=http://localhost:8000
 ```
 
 ### 4. Promote Admin
@@ -133,6 +133,7 @@ UPDATE members SET is_admin = true WHERE email = 'your-email@example.com';
 | PUT | `/api/members/{id}` | ✅ | Update own profile |
 | DELETE | `/api/members/{id}` | ✅ | Delete own account |
 | GET | `/api/admin/members` | Admin | List all members (paginated) |
+| GET | `/api/admin/members/{id}` | Admin | Get a specific member |
 | POST | `/api/admin/members` | Admin | Add a member |
 | PUT | `/api/admin/members/{id}` | Admin | Edit any member |
 | DELETE | `/api/admin/members/{id}` | Admin | Delete any member |

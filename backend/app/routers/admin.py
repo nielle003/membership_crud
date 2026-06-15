@@ -2,6 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import or_
 from app.database import get_db
 from app.models import Member
 from app.schemas import RegisterRequest, MemberResponse, MemberUpdate, PaginatedMembers
@@ -61,11 +62,21 @@ def register(request: Request, req: RegisterRequest, db: database, admin_user: A
     
 
 @router.get("/members", response_model=PaginatedMembers)
-def get_all_users( db: database, admin_user: Annotated[Member, Depends(get_admin_user)], skip: int = 0, limit: int = 10):
+def get_all_users( db: database, admin_user: Annotated[Member, Depends(get_admin_user)], skip: int = 0, limit: int = 10, search: str = ""):
     #admin-only endpoint to get all registered users
 
-    total = db.query(Member).count() #get number of members in the database
-    members = db.query(Member).offset(skip).limit(limit).all() #paginated
+
+    query = db.query(Member)
+    if search:
+        query = query.filter(
+            or_(
+                Member.email.ilike(f"%{search}%"),
+                Member.full_name.ilike(f"%{search}%"),
+            )
+        )
+    query = query.order_by(Member.id.desc()) #order by newest first
+    total = query.count() #get number of members in the database
+    members = query.offset(skip).limit(limit).all() #paginated
     return {"total": total, "skip": skip, "limit": limit, "members": members}
 
 

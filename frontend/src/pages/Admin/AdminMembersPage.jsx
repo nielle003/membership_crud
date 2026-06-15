@@ -12,19 +12,29 @@ export default function AdminMembersPage() {
     const [error, setError] = useState('');
     const { token, logout, isAdmin } = useAuth();
     const [page, setPage] = useState(0);        // current page (skip value)
-    const [total, setTotal] = useState(0);      // total members
+    const [total, setTotal] = useState(0);
+    const [search, setSearch] = useState('');     // total members
     const limit = 5;
     const navigate = useNavigate();
     const totalPages = Math.ceil(total / limit);
+    const [debouncedSearch, setDebouncedSearch] = useState('');
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+        }, 300);  // waits 300ms after user stops typing
+
+        return () => clearTimeout(timer);  // clears previous timer on each keystroke
+    }, [search]);
 
     useEffect(() => {
         loadMembers();
-    }, [page]);
+        console.log('Loading members with search:', debouncedSearch);
+    }, [page, debouncedSearch]);
 
 
     const loadMembers = async () => {
-        const res = await fetch(`${API_URL}/api/admin/members?skip=${page}&limit=${limit}`, {
+        const res = await fetch(`${API_URL}/api/admin/members?skip=${page}&limit=${limit}&search=${debouncedSearch}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -63,10 +73,19 @@ export default function AdminMembersPage() {
             <h1>Admin - Manage Members</h1>
             {loading && <div>Loading...</div>}
             {error && <div className='error'>{error}</div>}
+
             <header className="header-header">
                 <button onClick={() => navigate('/admin/members/add')} className="btn-addmember">
                     Add Member
                 </button>
+                <div className="search-bar">
+                    <input
+                        type="text"
+                        placeholder="Search by name or email..."
+                        value={search}
+                        onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+                    />
+                </div>
                 <button onClick={() => { logout(); navigate('/login'); }} className="btn-logout">
                     Logout
                 </button>
